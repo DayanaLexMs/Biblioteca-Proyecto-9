@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package controlador;
 
 import vista.JFPrestamos;
@@ -30,12 +26,14 @@ public class ControladorPrestamosLibros implements ActionListener {
     private ArrayList<Libro> listaLibros;
     private ArrayList<Usuario> listaUsuarios;
     private ArrayList<Prestamo> listaPrestamosAc;
+    private ArrayList<Prestamo> listaPrestamosHistorial;
 
     public ControladorPrestamosLibros(JFPrestamos frmPrestamos) {
         this.frmPrestamos = frmPrestamos;
         this.listaUsuarios = new ArrayList<>();
         this.listaLibros = new ArrayList<>();
         this.listaPrestamosAc = new ArrayList<>();
+        this.listaPrestamosHistorial = new ArrayList<>();
         deshabilitarInicio();
         registrarLibros();
         this.frmPrestamos.btnRegistrar.addActionListener(this);
@@ -63,12 +61,11 @@ public class ControladorPrestamosLibros implements ActionListener {
         if (e.getSource() == this.frmPrestamos.btnDevolver) {
             devolverLibro();
         }
-        if (e.getSource() == this.frmPrestamos.btnConsultarrrrr){
-            this.frmPrestamos.panelConsultar.setVisible(true);
+        if (e.getSource() == this.frmPrestamos.btnConsultarrrrr) {
+            abrirPanelConsultar();
         }
         if (e.getSource() == this.frmPrestamos.btnConsultar) {
-            consultarInfoPrestamos();
-            
+            mostrarInfoPrestamoSeleccionado();
         }
     }
 
@@ -77,9 +74,7 @@ public class ControladorPrestamosLibros implements ActionListener {
         this.frmPrestamos.btnHacerPrestamos.setVisible(false);
         this.frmPrestamos.panelDevolucion.setVisible(false);
         this.frmPrestamos.panelConsultar.setVisible(false);
-        this.frmPrestamos.btnConsultarrrrr.setVisible(false);
     }
-    
 
     public void registrarUsuario() {
         String id = this.frmPrestamos.txtId.getText();
@@ -268,7 +263,7 @@ public class ControladorPrestamosLibros implements ActionListener {
         Libro libroDevuelto = prestamo.getLibroPrestado();
         libroDevuelto.setCanCopias(libroDevuelto.getCanCopias() + 1);
 
-        llenarComboPrestamosActivos();
+        listaPrestamosHistorial.add(prestamo);
         listaPrestamosAc.remove(prestamo);
         llenarComboPrestamosActivos();
         this.frmPrestamos.txtFechaDevFinal.setText("");
@@ -277,11 +272,26 @@ public class ControladorPrestamosLibros implements ActionListener {
     }
 
     private void llenarComboPrestamosActivos() {
-        this.frmPrestamos.cmbPrestamosActivos.removeAllItems(); 
-        this.frmPrestamos.cmbPrestamosBuscar.removeAllItems();
+        this.frmPrestamos.cmbPrestamosActivos.removeAllItems();
+
         for (Prestamo p : listaPrestamosAc) {
             String texto = p.getUsuario().getNombre() + " - " + p.getLibroPrestado().getTitulo() + " - " + p.getFechaDev();
             this.frmPrestamos.cmbPrestamosActivos.addItem(texto);
+        }
+    }
+
+    private void llenarComboPrestamosConsultar() {
+        this.frmPrestamos.cmbPrestamosBuscar.removeAllItems();
+
+        // Préstamos activos
+        for (Prestamo p : listaPrestamosAc) {
+            String texto = p.getUsuario().getNombre() + " - " + p.getLibroPrestado().getTitulo();
+            this.frmPrestamos.cmbPrestamosBuscar.addItem(texto);
+        }
+
+        // Préstamos del historial
+        for (Prestamo p : listaPrestamosHistorial) {
+            String texto = p.getUsuario().getNombre() + " - " + p.getLibroPrestado().getTitulo();
             this.frmPrestamos.cmbPrestamosBuscar.addItem(texto);
         }
     }
@@ -296,11 +306,45 @@ public class ControladorPrestamosLibros implements ActionListener {
         return null;
     }
 
-    //Necesito poder consutlar los estados de los libros*/
-    
-    private void consultarInfoPrestamos(){
-        
+    private void abrirPanelConsultar() {
+        llenarComboPrestamosConsultar();
+        this.frmPrestamos.panelConsultar.setVisible(true);
+        this.frmPrestamos.pack();
     }
-    
-     
+
+    private void mostrarInfoPrestamoSeleccionado() {
+        int idx = this.frmPrestamos.cmbPrestamosBuscar.getSelectedIndex();
+
+        if (idx == -1) {
+            JOptionPane.showMessageDialog(frmPrestamos, "Seleccione un préstamo");
+            return;
+        }
+
+        Prestamo prestamo = null;
+        if (idx < listaPrestamosAc.size()) {
+            prestamo = listaPrestamosAc.get(idx);
+        } else {
+            int idxHistorial = idx - listaPrestamosAc.size();
+            if (idxHistorial < listaPrestamosHistorial.size()) {
+                prestamo = listaPrestamosHistorial.get(idxHistorial);
+            }
+        }
+
+        if (prestamo == null) {
+            JOptionPane.showMessageDialog(frmPrestamos, "Préstamo no encontrado");
+            return;
+        }
+
+        String info = "INFORMACIÓN DEL PRÉSTAMO \n\n" +
+                      "Usuario: " + prestamo.getUsuario().getNombre() + "\n" +
+                      "ID: " + prestamo.getUsuario().getId() + "\n" +
+                      "Libro: " + prestamo.getLibroPrestado().getTitulo() + "\n" +
+                      "Autor: " + prestamo.getLibroPrestado().getAutor() + "\n" +
+                      "Fecha préstamo: " + prestamo.getFechaInicio() + "\n" +
+                      "Fecha límite: " + prestamo.getFechaDev() + "\n" +
+                      "Estado: " + prestamo.getEstado();
+
+        JOptionPane.showMessageDialog(frmPrestamos, info);
+        this.frmPrestamos.pack();
+    }
 }
