@@ -29,20 +29,23 @@ public class ControladorPrestamosLibros implements ActionListener {
     private JFPrestamos frmPrestamos;
     private ArrayList<Libro> listaLibros;
     private ArrayList<Usuario> listaUsuarios;
-    private ArrayList<Prestamo> listaPrestamos;
+    private ArrayList<Prestamo> listaPrestamosAc;
 
     public ControladorPrestamosLibros(JFPrestamos frmPrestamos) {
         this.frmPrestamos = frmPrestamos;
         this.listaUsuarios = new ArrayList<>();
         this.listaLibros = new ArrayList<>();
-        this.listaPrestamos = new ArrayList<>();
+        this.listaPrestamosAc = new ArrayList<>();
         deshabilitarInicio();
         registrarLibros();
         this.frmPrestamos.btnRegistrar.addActionListener(this);
         this.frmPrestamos.btnHacerPrestamos.addActionListener(this);
         this.frmPrestamos.btnCrearPrest.addActionListener(this);
+        this.frmPrestamos.btnDevolver.addActionListener(this);
+        this.frmPrestamos.btnConsultar.addActionListener(this);
+        this.frmPrestamos.btnConsultarrrrr.addActionListener(this);
         this.frmPrestamos.pack();
-        
+
     }
 
     @Override
@@ -53,16 +56,30 @@ public class ControladorPrestamosLibros implements ActionListener {
         if (e.getSource() == this.frmPrestamos.btnHacerPrestamos) {
             habilitarRealizarPrestamos();
         }
-        if (e.getSource() == this.frmPrestamos.btnCrearPrest){
+        if (e.getSource() == this.frmPrestamos.btnCrearPrest) {
             realizarPrestamo();
             hacerNuevoPrestamo();
+        }
+        if (e.getSource() == this.frmPrestamos.btnDevolver) {
+            devolverLibro();
+        }
+        if (e.getSource() == this.frmPrestamos.btnConsultarrrrr){
+            this.frmPrestamos.panelConsultar.setVisible(true);
+        }
+        if (e.getSource() == this.frmPrestamos.btnConsultar) {
+            consultarInfoPrestamos();
+            
         }
     }
 
     private void deshabilitarInicio() {
         this.frmPrestamos.panelPrestamo.setVisible(false);
         this.frmPrestamos.btnHacerPrestamos.setVisible(false);
+        this.frmPrestamos.panelDevolucion.setVisible(false);
+        this.frmPrestamos.panelConsultar.setVisible(false);
+        this.frmPrestamos.btnConsultarrrrr.setVisible(false);
     }
+    
 
     public void registrarUsuario() {
         String id = this.frmPrestamos.txtId.getText();
@@ -146,7 +163,7 @@ public class ControladorPrestamosLibros implements ActionListener {
     }
 
     private void realizarPrestamo() {
-       
+
         String libroEscogido = this.frmPrestamos.cmbLibro.getSelectedItem().toString();
         String usuario = this.frmPrestamos.cmbUsuario.getSelectedItem().toString();
         String fechaPrestamo = this.frmPrestamos.txtFechaPres.getText();
@@ -155,29 +172,28 @@ public class ControladorPrestamosLibros implements ActionListener {
             return;
 
         }
-        if(!this.validarDisponibilidadLibro()){
+        if (!this.validarDisponibilidadLibro()) {
             JOptionPane.showMessageDialog(frmPrestamos, "NO HAY COPIAS DISPONIBLES DEL LIBRO");
             return;
         }
-        
+
         //Aquí empiezo lo del préstamo
         Libro libroPrestar = null;
-        for(Libro l: listaLibros){
-            if(l.getTitulo().equalsIgnoreCase(libroEscogido)){
+        for (Libro l : listaLibros) {
+            if (l.getTitulo().equalsIgnoreCase(libroEscogido)) {
                 libroPrestar = l;
                 break;
             }
         }
-        
+
         Usuario usuarioPr = null;
-        for(Usuario u: listaUsuarios){
-            if(u.getNombre().equals(usuario)){
+        for (Usuario u : listaUsuarios) {
+            if (u.getNombre().equals(usuario)) {
                 usuarioPr = u;
                 break;
             }
         }
-        
-        
+
         Fecha fechaP = this.crearFecha(fechaPrestamo);
         /*int plazo = 0;
         if(usuarioPr instanceof Estudiante || usuarioPr instanceof Profesor){
@@ -187,20 +203,22 @@ public class ControladorPrestamosLibros implements ActionListener {
         }
         
         Fecha fechaDev = fechaP.sumarDias(plazo);*/
-        
+
         Prestamo prestN = new Prestamo(fechaP, usuarioPr, libroPrestar);
-        libroPrestar.setCanCopias(libroPrestar.getCanCopias()-1);
+        libroPrestar.setCanCopias(libroPrestar.getCanCopias() - 1);
         prestN.setEstado(EstadoPres.PRESTADO);
-        listaPrestamos.add(prestN);
+        listaPrestamosAc.add(prestN);
         this.frmPrestamos.txtInfoPrest.setText(prestN.toString());
+        llenarComboPrestamosActivos();
+        this.frmPrestamos.panelDevolucion.setVisible(true);
         this.frmPrestamos.pack();
-        
+
     }
 
     private boolean validarDisponibilidadLibro() {
         String libroE = this.frmPrestamos.cmbLibro.getSelectedItem().toString();
         for (Libro l : listaLibros) {
-            if (l.getTitulo().equalsIgnoreCase(libroE)){
+            if (l.getTitulo().equalsIgnoreCase(libroE)) {
                 if (l.getCanCopias() > 0) {
                     return true;
                 } else {
@@ -208,22 +226,81 @@ public class ControladorPrestamosLibros implements ActionListener {
                 }
             }
 
-        }return false;
+        }
+        return false;
 
     }
-    
-    private void habilitarRealizarPrestamos(){
+
+    private void habilitarRealizarPrestamos() {
         this.frmPrestamos.panelPrestamo.setVisible(true);
         this.frmPrestamos.panelRegistro.setVisible(false);
         this.frmPrestamos.btnHacerPrestamos.setVisible(false);
         this.frmPrestamos.pack();
     }
-    
-    private void hacerNuevoPrestamo(){
+
+    private void hacerNuevoPrestamo() {
         this.frmPrestamos.txtId.setText("");
         this.frmPrestamos.txtNombre.setText("");
         this.frmPrestamos.txtFechaPres.setText("");
-        
+
     }
 
+    private void devolverLibro() {
+        String prestamoDevolver = this.frmPrestamos.cmbPrestamosActivos.getSelectedItem().toString();
+        String fechaEntregado = this.frmPrestamos.txtFechaDevFinal.getText();
+
+        if (prestamoDevolver.isEmpty() || fechaEntregado.isEmpty()) {
+            JOptionPane.showMessageDialog(frmPrestamos, "CAMPOS IMCOMPLETOS");
+            return;
+        }
+
+        Prestamo prestamo = this.buscarPrestamo(prestamoDevolver);
+        Fecha fechaF = this.crearFecha(fechaEntregado);
+
+        if (fechaF.esDespues(prestamo.getFechaDev())) {
+            prestamo.setEstado(EstadoPres.MULTADO);
+            this.frmPrestamos.txtResulDev.setText("MULTADO DEBIDO A ENTREGA FUERA DE PLAZO");
+        } else {
+            prestamo.setEstado(EstadoPres.DEVUELTO);
+            this.frmPrestamos.txtResulDev.setText("ENTREGADO");
+        }
+
+        Libro libroDevuelto = prestamo.getLibroPrestado();
+        libroDevuelto.setCanCopias(libroDevuelto.getCanCopias() + 1);
+
+        llenarComboPrestamosActivos();
+        listaPrestamosAc.remove(prestamo);
+        llenarComboPrestamosActivos();
+        this.frmPrestamos.txtFechaDevFinal.setText("");
+        this.frmPrestamos.pack();
+
+    }
+
+    private void llenarComboPrestamosActivos() {
+        this.frmPrestamos.cmbPrestamosActivos.removeAllItems(); 
+        this.frmPrestamos.cmbPrestamosBuscar.removeAllItems();
+        for (Prestamo p : listaPrestamosAc) {
+            String texto = p.getUsuario().getNombre() + " - " + p.getLibroPrestado().getTitulo() + " - " + p.getFechaDev();
+            this.frmPrestamos.cmbPrestamosActivos.addItem(texto);
+            this.frmPrestamos.cmbPrestamosBuscar.addItem(texto);
+        }
+    }
+
+    private Prestamo buscarPrestamo(String textoSeleccionado) {
+        for (Prestamo p : listaPrestamosAc) {
+            String textoPrestamo = p.getUsuario().getNombre() + " - " + p.getLibroPrestado().getTitulo() + " - " + p.getFechaDev();
+            if (textoPrestamo.equals(textoSeleccionado)) {
+                return p;
+            }
+        }
+        return null;
+    }
+
+    //Necesito poder consutlar los estados de los libros*/
+    
+    private void consultarInfoPrestamos(){
+        
+    }
+    
+     
 }

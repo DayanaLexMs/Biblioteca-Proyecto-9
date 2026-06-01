@@ -9,6 +9,7 @@ package modelo;
  * @author USUARIO
  */
 public class Fecha {
+
     private int dia;
     private int mes;
     private int año;
@@ -42,30 +43,36 @@ public class Fecha {
     public void setAño(int año) {
         this.año = año;
     }
-    
-    public Fecha sumarDias(int dias){
+
+    public Fecha sumarDias(int dias) {
         int diaN = this.dia + dias;
         int mesN = this.mes;
         int añoN = this.año;
-        
-        if(diaN > 30){
+
+        if (diaN > 30) {
             diaN = diaN - 30;
             mesN++;
         }
-        if(mesN > 12){
+        if (mesN > 12) {
             mesN = 1;
             añoN++;
         }
-        return new Fecha (diaN, mesN, añoN);
+        return new Fecha(diaN, mesN, añoN);
+    }
+
+    public boolean esDespues(Fecha otra) {
+        if (this.año != otra.año) {
+            return this.año > otra.año;
+        }
+        if (this.mes != otra.mes) {
+            return this.mes > otra.mes;
+        }
+        return this.dia > otra.dia;
     }
 
     @Override
     public String toString() {
         return dia + "/" + mes + "/" + año;
     }
-    
-    
 
-    
-        
 }
