@@ -3,6 +3,8 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
  */
 package principal;
+import vista.JFPrestamos;
+import controlador.ControladorPrestamosLibros;
 
 /**
  *
@@ -14,7 +16,10 @@ public class Principal {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+       JFPrestamos frmPrestamos = new JFPrestamos();
+       ControladorPrestamosLibros ctrl = new ControladorPrestamosLibros (frmPrestamos);
+       frmPrestamos.setVisible(true);
+       frmPrestamos.setLocationRelativeTo(null);
     }
     
 }
